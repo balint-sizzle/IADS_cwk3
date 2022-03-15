@@ -71,7 +71,17 @@ class Graph:
     # if it improves the tour value.
     # Return True/False depending on success.              
     def tryReverse(self,i,j):
-        pass
+        basecost = self.tour
+        pre = self.perm[:i]
+        post = self.perm[j+1:]
+        segment = self.perm[i:j+1]
+        self.perm = pre+segment[::-1]+post
+        self.tourValue()
+        if self.tour < basecost:
+            return True
+        else:
+            self.tour = basecost
+            self.perm = pre+segment+post
 
     def swapHeuristic(self,k):
         better = True
@@ -99,4 +109,18 @@ class Graph:
     # from node 0, taking the closest (unused) node as 'next'
     # each time.
     def Greedy(self):
-        pass
+        unused_nodes = [i for i in range(self.n)]
+        perm_i = 0
+        current_node = 0
+        while len(unused_nodes) > 0:
+            best_town = 0
+            lowest_dst = float("inf")
+            for i in unused_nodes:
+                if self.dists[current_node][i] < lowest_dst:
+                    lowest_dst = self.dists[current_node][i]
+                    best_town = i
+            self.perm[perm_i] = best_town
+            perm_i += 1
+            current_node = best_town
+            unused_nodes.remove(best_town)
+            
