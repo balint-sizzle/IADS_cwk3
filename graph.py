@@ -123,4 +123,73 @@ class Graph:
             perm_i += 1
             current_node = best_town
             unused_nodes.remove(best_town)
-            
+    
+    #Upper bound decided by number of ants, n, number of iterations
+    #O(sn), where s=number of ants * number of iterations and n=number of towns
+    def antColonyOptimisation(self, ants=10, alpha=0.7, beta=0.5, Q=1, p=0.3, iter=50):
+        """ 
+            Approximation algorithm for metric TSP problems
+
+            ants: number of ants to simulate each iteration
+            alpha: weight of pheromone amplification heuristic in probability function
+            beta: weight of closest city heuristic in probability function
+            Q: arbitary constant
+            p: pheromone decay parameter
+            iter: number of iterations
+        """
+        """ dists for 12
+       [[0, 4, 4, 4, 2, 3, 4, 6, 5, 2, 1, 3],
+       [4, 0, 3, 3, 4, 5, 3, 2, 3, 6, 7, 4],
+       [4, 3, 0, 3, 3, 3, 3, 3, 2, 4, 3, 4],
+       [4, 3, 3, 0, 1, 3, 3, 2, 3, 3, 4, 2],
+       [2, 4, 3, 1, 0, 2, 4, 5, 5, 3, 4, 3],
+       [3, 5, 3, 3, 2, 0, 2, 1, 3, 2, 3, 1],
+       [4, 3, 3, 3, 4, 2, 0, 3, 4, 3, 5, 3],
+       [6, 2, 3, 2, 5, 1, 3, 0, 3, 2, 4, 5],
+       [5, 3, 2, 3, 5, 3, 4, 3, 0, 4, 5, 4],
+       [2, 6, 4, 3, 3, 2, 3, 2, 4, 0, 3, 4],
+       [1, 7, 3, 4, 4, 3, 5, 4, 5, 3, 0, 3],
+       [3, 4, 4, 2, 3, 1, 3, 5, 4, 4, 3, 0]])
+        """
+        import numpy as np
+        self.pheromone_trails = [[1 if i!=j else 0 for j in range(self.n)] for i in range(self.n)]
+        best = float("inf")
+        for i in range(iter):
+            ant_paths = []
+            for k in range(ants):
+                start = random.randint(0,self.n-1)
+                path = [start]
+                self.remaining_towns = [i for i in range(self.n) if start != i]
+
+                while len(path) < self.n:
+                    path.append(self.pick_next_town(path[-1], alpha, beta))
+
+                
+                self.perm = path
+                self.tourValue()
+                if self.tour < best:
+                    print(np.array(path))
+                    best = self.tour
+                ant_paths.append((path, self.tour))
+                #print(path, self.tour)
+            self.update_pheromone_trails(Q, p, ant_paths)
+        print(np.array(self.pheromone_trails))
+        print(best)
+
+    def update_pheromone_trails(self, Q, p, ant_paths):
+        
+        for i in range(self.n):
+            for j in range(self.n):
+                pheromone_delta = sum([Q/L if (path.index(j)-1 == path.index(i) and i != j) else 0 for (path, L) in ant_paths])
+                #print("D:", pheromone_delta)
+                self.pheromone_trails[i][j] = (1-p)*self.pheromone_trails[i][j] + pheromone_delta
+
+    def pick_next_town(self, current_town, alpha, beta):
+        #print(self.remaining_towns)
+        numerators = [0 if current_town==j else (self.pheromone_trails[current_town][j]**alpha)*((1/self.dists[current_town][j])**beta) for j in self.remaining_towns]
+        denominator = sum(numerators)
+        weights = [n/denominator for n in numerators]
+        next_town = random.choices(self.remaining_towns, weights=weights, k=1)[0]
+        #print(current_town, next_town)
+        self.remaining_towns.remove(next_town)
+        return next_town
