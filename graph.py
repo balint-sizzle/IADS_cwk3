@@ -1,7 +1,7 @@
 from email.mime import base
 import math
 import random
-import visualise
+
 
 def euclid(p,q):
     x = p[0]-q[0]
@@ -124,18 +124,18 @@ class Graph:
             perm_i += 1
             current_node = best_town
             unused_nodes.remove(best_town)
-            visualise.draw_best(self.perm)
-            visualise.draw_towns()
-            visualise.update_screen()
+            # visualise.draw_best(self.perm)
+            # visualise.draw_towns()
+            # visualise.update_screen()
             time.sleep(0.04)
         self.tourValue()
         print(self.tour)
-        visualise.hold()
+        # visualise.hold()
 
     
     #Upper bound decided by number of ants, n, number of iterations
     #O(sn), where s=number of ants * number of iterations and n=number of towns
-    def antColonyOptimisation(self, ants=60, alpha=0.7, beta=0.85, Q=1, p=0.7, iter=100):
+    def antColonyOptimisation(self, ants=30, alpha=3, beta=2, Q=1000, p=0.8, iter=100):
         """ 
             Approximation algorithm for metric TSP problems
 
@@ -145,8 +145,8 @@ class Graph:
             Q: arbitary constant
             p: pheromone decay parameter
             iter: number of iterations
-        """
-        """ dists for 12
+        
+        dists for 12
        [[0, 4, 4, 4, 2, 3, 4, 6, 5, 2, 1, 3],
        [4, 0, 3, 3, 4, 5, 3, 2, 3, 6, 7, 4],
        [4, 3, 0, 3, 3, 3, 3, 3, 2, 4, 3, 4],
@@ -161,12 +161,13 @@ class Graph:
        [3, 4, 4, 2, 3, 1, 3, 5, 4, 4, 3, 0]])
         """
         import numpy as np
+        import visualise
         
         self.pheromone_trails = [[1 if i!=j else 0 for j in range(self.n)] for i in range(self.n)]
         best = float("inf")
         best_path = []
         for i in range(iter):
-            print("iter:",i)
+            #print("iter:",i)
             ant_paths = []
             for k in range(ants):
                 start = random.randint(0,self.n-1)
@@ -177,21 +178,24 @@ class Graph:
                     path.append(self.pick_next_town(path[-1], alpha, beta))
                     #visualise.update_screen()
 
-                
                 self.perm = path
                 self.tourValue()
                 if self.tour < best:
-                    visualise.draw_best(path)
-                    visualise.draw_towns()
+                    #visualise.draw_best(path)
+                    #visualise.draw_towns()
                     #print(np.array(path))
                     best_path = path
                     best = self.tour
-                visualise.update_screen()
+                    visualise.draw_best(path)
+                    visualise.draw_towns()
+                    visualise.update_screen()
                 ant_paths.append((path, self.tour))
                 #print(path, self.tour)
             self.update_pheromone_trails(Q, p, ant_paths)
-        #print(np.array(self.pheromone_trails))
+        print(np.array(self.pheromone_trails))
         print(best)
+        visualise.draw_best(best_path)
+        visualise.draw_towns()
         visualise.hold()
 
     def update_pheromone_trails(self, Q, p, ant_paths):

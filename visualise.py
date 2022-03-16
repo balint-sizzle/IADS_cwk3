@@ -3,7 +3,7 @@ import math
 from random import sample
 pygame.init()
 
-p = 200
+p = 12
 canvas = pygame.display.set_mode((1200,800))
 canvas.fill((100,100,100))
 
@@ -28,8 +28,17 @@ def draw_best(path):
         pygame.draw.line(canvas, (0,0,0),start, end, 3)
     pygame.draw.line(canvas, (0, 100,0), points[path[0]], points[path[-1]], 4)
 
-def update_screen():
+def draw_pheromones(phers):
+    canvas.fill((100,100,100))
 
+    for i in range(len(phers)):
+        for j in range(len(phers[i])):
+            start = points[i]
+            end = points[j]
+            strength = int(phers[i][j]*255)
+            pygame.draw.line(canvas, (strength,0,0), start, end, 2)
+
+def update_screen():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -40,4 +49,4 @@ def hold():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-    pygame.display.update()
+        pygame.display.update()
