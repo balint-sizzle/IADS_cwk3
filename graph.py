@@ -1,7 +1,7 @@
 from email.mime import base
 import math
 import random
-
+import visualise
 
 def euclid(p,q):
     x = p[0]-q[0]
@@ -109,6 +109,7 @@ class Graph:
     # from node 0, taking the closest (unused) node as 'next'
     # each time.
     def Greedy(self):
+        import time
         unused_nodes = [i for i in range(self.n)]
         perm_i = 0
         current_node = 0
@@ -123,10 +124,18 @@ class Graph:
             perm_i += 1
             current_node = best_town
             unused_nodes.remove(best_town)
+            visualise.draw_best(self.perm)
+            visualise.draw_towns()
+            visualise.update_screen()
+            time.sleep(0.04)
+        self.tourValue()
+        print(self.tour)
+        visualise.hold()
+
     
     #Upper bound decided by number of ants, n, number of iterations
     #O(sn), where s=number of ants * number of iterations and n=number of towns
-    def antColonyOptimisation(self, ants=10, alpha=0.7, beta=0.5, Q=1, p=0.3, iter=50):
+    def antColonyOptimisation(self, ants=60, alpha=0.7, beta=0.85, Q=1, p=0.7, iter=100):
         """ 
             Approximation algorithm for metric TSP problems
 
@@ -152,9 +161,12 @@ class Graph:
        [3, 4, 4, 2, 3, 1, 3, 5, 4, 4, 3, 0]])
         """
         import numpy as np
+        
         self.pheromone_trails = [[1 if i!=j else 0 for j in range(self.n)] for i in range(self.n)]
         best = float("inf")
+        best_path = []
         for i in range(iter):
+            print("iter:",i)
             ant_paths = []
             for k in range(ants):
                 start = random.randint(0,self.n-1)
@@ -163,18 +175,24 @@ class Graph:
 
                 while len(path) < self.n:
                     path.append(self.pick_next_town(path[-1], alpha, beta))
+                    #visualise.update_screen()
 
                 
                 self.perm = path
                 self.tourValue()
                 if self.tour < best:
-                    print(np.array(path))
+                    visualise.draw_best(path)
+                    visualise.draw_towns()
+                    #print(np.array(path))
+                    best_path = path
                     best = self.tour
+                visualise.update_screen()
                 ant_paths.append((path, self.tour))
                 #print(path, self.tour)
             self.update_pheromone_trails(Q, p, ant_paths)
-        print(np.array(self.pheromone_trails))
+        #print(np.array(self.pheromone_trails))
         print(best)
+        visualise.hold()
 
     def update_pheromone_trails(self, Q, p, ant_paths):
         
